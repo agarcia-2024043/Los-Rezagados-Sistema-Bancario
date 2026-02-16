@@ -1,12 +1,12 @@
 Sistema Bancario - Proyecto de Gestión Financiera
 
-📋 Descripción del Proyecto
+Descripción del Proyecto
 Sistema bancario integral diseñado para la gestión eficiente y segura de operaciones financieras básicas. Este proyecto establece una planificación organizada para el desarrollo de una solución bancaria que contempla desde la administración de cuentas hasta operaciones de conversión de divisas, priorizando la seguridad y la experiencia del usuario.
 
-🎯 Objetivo General
+Objetivo General
 Desarrollar un sistema bancario que permita la gestión eficiente y segura de las operaciones financieras básicas de los usuarios, garantizando la protección de la información y el control de accesos mediante la asignación de roles, basándose en procesos del sistema financiero del mundo real.
 
-🚀 Propósito del Proyecto
+Propósito del Proyecto
 Este documento establece la planificación y organización del desarrollo del sistema bancario, definiendo:
 
 Estructura de trabajo del equipo
@@ -14,7 +14,7 @@ Estructura de trabajo del equipo
 -Distribución de responsabilidades
 -Alcance y funcionalidades del sistema
 
-🎯 Objetivos Específicos
+Objetivos Específicos
 Seguridad y Control de Acceso
 
 -Garantizar la seguridad de los usuarios y la protección de su información financiera
@@ -41,7 +41,7 @@ Conversión de Divisas
 -Permitir operaciones financieras en diferentes monedas
 -Actualización de tasas de cambio
 
-🏗️ Arquitectura del Sistema
+Arquitectura del Sistema
 Módulos Principales
 1. Módulo de Autenticación y Autorización
 
@@ -110,7 +110,7 @@ Ceremonias SCRUM
 -Sprint Review: Demostración del incremento desarrollado
 -Sprint Retrospective: Reflexión y mejora del proceso
 
-🔒 Seguridad
+Seguridad
 Principios de Seguridad
 
 -Autenticación robusta: Verificación de identidad de usuarios
@@ -121,28 +121,28 @@ Principios de Seguridad
 
 Roles de Usuario
 RolPermisosDescripciónAdministradorAcceso completo al sistemaGestión de usuarios, configuración del sistemaEmpleado BancarioOperaciones de cuenta, consultasAtención al cliente, procesamiento de transaccionesClienteOperaciones propiasConsulta de saldo, transferencias, depósitos
-📊 Funcionalidades Principales
+ Funcionalidades Principales
 
 Para Clientes
-✅ Registro e inicio de sesión seguro
-✅ Consulta de saldo en tiempo real
-✅ Realización de depósitos
-✅ Retiro de fondos
-✅ Transferencias entre cuentas propias
-✅ Transferencias a terceros
-✅ Conversión de divisas
-✅ Historial de transacciones
-✅ Generación de estados de cuenta 
+Registro e inicio de sesión seguro
+Consulta de saldo en tiempo real
+Realización de depósitos
+Retiro de fondos
+Transferencias entre cuentas propias
+Transferencias a terceros
+Conversión de divisas
+Historial de transacciones
+Generación de estados de cuenta 
 
 Para Administradores
-✅ Gestión de usuarios y roles
-✅ Creación y configuración de cuentas
-✅ Monitoreo de transacciones
-✅ Gestión de tasas de cambio
-✅ Reportes y análisis del sistema
-✅ Auditoría de operaciones
+Gestión de usuarios y roles
+Creación y configuración de cuentas
+Monitoreo de transacciones
+Gestión de tasas de cambio
+Reportes y análisis del sistema
+Auditoría de operaciones
 
-🎯 Alcance del Proyecto
+Alcance del Proyecto
 Incluido en el Alcance
 
 Sistema de autenticación y autorización
@@ -153,22 +153,22 @@ Sistema de autenticación y autorización
 -Panel de administración
 
 
-📈 Beneficios Esperados
+Beneficios Esperados
 Para los Usuarios
 
-✅ Seguridad: Protección robusta de información financiera
-✅ Conveniencia: Acceso 24/7 a servicios bancarios
-✅ Transparencia: Visibilidad completa de operaciones
-✅ Eficiencia: Operaciones rápidas y confiables
+Seguridad: Protección robusta de información financiera
+Conveniencia: Acceso 24/7 a servicios bancarios
+Transparencia: Visibilidad completa de operaciones
+Eficiencia: Operaciones rápidas y confiables
 
 Para la Organización
 
-✅ Escalabilidad: Arquitectura preparada para crecimiento
-✅ Mantenibilidad: Código organizado y documentado
-✅ Trazabilidad: Auditoría completa de operaciones
-✅ Competitividad: Sistema moderno alineado con estándares del mercado
+Escalabilidad: Arquitectura preparada para crecimiento
+Mantenibilidad: Código organizado y documentado
+Trazabilidad: Auditoría completa de operaciones
+Competitividad: Sistema moderno alineado con estándares del mercado
 
-🛡️ Buenas Prácticas de Desarrollo
+Buenas Prácticas de Desarrollo
 El proyecto se adhiere a las siguientes buenas prácticas:
 
 -Clean Code: Código legible y mantenible
@@ -181,7 +181,7 @@ El proyecto se adhiere a las siguientes buenas prácticas:
 
 
 
-👥 Equipo de Desarrollo
+Equipo de Desarrollo
 
 El proyecto requiere la participación de profesionales con los siguientes roles:
 
@@ -195,7 +195,7 @@ QA Engineers
 Security Specialist
 DevOps Engineer
 
-🔄 Entregables
+Entregables
 Documentación
 
 Plan de proyecto
@@ -223,6 +223,6 @@ Documentación de incidentes
 
 Versión del Documento: 1.0
 
-Fecha de Última Actualización: 14 Febrero 2026
+Fecha de Última Actualización: 15 Febrero 2026
 
 Estado: 35%
