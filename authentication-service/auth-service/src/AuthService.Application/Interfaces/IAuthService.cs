@@ -4,6 +4,9 @@ namespace AuthService.Application.Interfaces;
 
 public interface IAuthService
 {
-    AuthResponseDto Login(LoginDto dto);
-    AuthResponseDto Register(RegisterDto dto);
+    Task<AuthResponseDto> Login(LoginDto dto);
+    Task<AuthResponseDto> Register(RegisterDto dto);
+    Task<bool> VerifyEmail(string token); 
+    Task ForgotPassword(string email);    
+    Task ResetPassword(ResetPasswordDto dto); 
 }
