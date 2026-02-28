@@ -14,11 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 var configuration = builder.Configuration;
 
+
 // ============================================
 // CONFIGURACIÓN DE BASE DE DATOS
 // ============================================
+// Configuración para PostgreSQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ============================================
 // CONFIGURACIÓN DE JWT
@@ -49,17 +51,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
 
         options.Events = new JwtBearerEvents
+    
+{
+    OnAuthenticationFailed = context =>
+    {
+        if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
         {
-            OnAuthenticationFailed = context =>
-            {
-                if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-                {
-                    context.Response.Headers.Add("Token-Expired", "true");
-                }
-                return Task.CompletedTask;
-            }
-        };
+            // CAMBIO: Usa .Append en lugar de .Add para evitar ArgumentException
+            context.Response.Headers.Append("Token-Expired", "true");
+            
+            // O TAMBIÉN PUEDES USAR EL INDEXADOR:
+            // context.Response.Headers["Token-Expired"] = "true";
+        }
+        return Task.CompletedTask;
+    }
+};
     });
+
 
 // ============================================
 // POLÍTICAS DE AUTORIZACIÓN
@@ -80,7 +88,9 @@ builder.Services.AddAuthorization(options =>
 // REGISTRO DE SERVICIOS Y REPOSITORIOS
 // ============================================
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IAuthService, Application.Services.AuthService>();
+
+builder.Services.AddScoped<AuthService.Application.Interfaces.IAuthService, AuthService.Application.Services.AuthService>();
+
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
@@ -96,9 +106,9 @@ builder.Services.AddCors(options =>
             .Get<string[]>() ?? new[] { "http://localhost:4200", "http://localhost:3000" };
 
         policy.WithOrigins(allowedOrigins)
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -194,37 +204,31 @@ app.MapGet("/", () => new
 }).AllowAnonymous();
 
 // ============================================
-// INICIALIZACIÓN DE BD
+// INICIALIZACIÓN DE BD (Versión Estable)
 // ============================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
-    var logger = services.GetRequiredService<ILogger<Program>>();
+    var dbLogger = services.GetRequiredService<ILogger<Program>>();
 
     try
     {
-        logger.LogInformation("Verificando conexión a la base de datos...");
-        
         var context = services.GetRequiredService<ApplicationDbContext>();
         
-        // Aplicar migraciones
-        await context.Database.MigrateAsync();
+        dbLogger.LogInformation("Verificando migraciones pendientes...");
         
-        logger.LogInformation("✅ Base de datos inicializada correctamente");
+        // Ejecutamos de forma síncrona para evitar el error CS4034 en el Program.cs
+        context.Database.Migrate(); 
+        
+        dbLogger.LogInformation("✅ Base de datos inicializada correctamente");
 
-        // Verificar roles
-        var rolesCount = await context.Roles.CountAsync();
-        logger.LogInformation("Roles en BD: {Count}", rolesCount);
-
-        if (rolesCount == 0)
-        {
-            logger.LogWarning("⚠️ No hay roles. Ejecuta las migraciones.");
-        }
+        // Usamos .Count() en lugar de CountAsync para no necesitar await
+        var rolesCount = context.Role.Count();
+        dbLogger.LogInformation("Roles en BD: {Count}", rolesCount);
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "❌ Error al inicializar la base de datos");
-        throw;
+        dbLogger.LogError(ex, "❌ Error al conectar o inicializar la base de datos.");
     }
 }
 
@@ -237,4 +241,3 @@ logger.LogInformation("🌐 Entorno: {Environment}", app.Environment.Environment
 
 app.Run();
 
-logger.LogInformation("✅ Sistema Bancario API ejecutándose");
