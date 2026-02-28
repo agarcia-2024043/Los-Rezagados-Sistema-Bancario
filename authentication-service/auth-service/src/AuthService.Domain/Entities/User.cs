@@ -1,9 +1,33 @@
-namespace AuthService.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-public class User
+namespace AuthService.Domain.Entities
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string Username { get; set; } = string.Empty;
-    public string PasswordHash { get; set; } = string.Empty;
-    public string Role { get; set; } = "USER_ROLE";
+    public class User
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string Email { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string PasswordHash { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+        public bool IsLocked { get; set; } = false; 
+        public int FailedLoginAttempts { get; set; } = 0;
+        public DateTime? LastLogin { get; set; }
+
+        // Propiedades para verificación y recuperación (Bancario)
+        public bool EmailConfirmed { get; set; } = false;
+        public string? VerificationToken { get; set; }
+        public string? ResetToken { get; set; }
+        public DateTime? ResetTokenExpires { get; set; }
+
+        // --- RELACIONES ---
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+        // Propiedad calculada para que el Integrante 2 obtenga el rol fácilmente
+        public string MainRole => (UserRoles != null && UserRoles.Any()) 
+            ? UserRoles.First().Role?.Name ?? "Cliente" 
+            : "Cliente";
+    }
 }
