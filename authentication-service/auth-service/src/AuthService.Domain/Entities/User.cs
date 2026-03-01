@@ -16,7 +16,6 @@ namespace AuthService.Domain.Entities
         public int FailedLoginAttempts { get; set; } = 0;
         public DateTime? LastLogin { get; set; }
 
-        // Propiedades para verificación y recuperación (Bancario)
         public bool EmailConfirmed { get; set; } = false;
         public string? VerificationToken { get; set; }
         public string? ResetToken { get; set; }
@@ -25,7 +24,6 @@ namespace AuthService.Domain.Entities
         // --- RELACIONES ---
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
-        // Propiedad calculada para que el Integrante 2 obtenga el rol fácilmente
         public string MainRole => (UserRoles != null && UserRoles.Any()) 
             ? UserRoles.First().Role?.Name ?? "Cliente" 
             : "Cliente";

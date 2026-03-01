@@ -1,38 +1,53 @@
-import { Account } from "../models/account.model.js";
-import { Transaction } from "../models/transaction.model.js";
+import { Account } from "../Models/account.model.js";
+import { Transaction } from "../Models/transaction.model.js";
 
-/**
- * Obtener el historial de transferencias
- */
+// =====================================================
+// HISTORIAL DE TRANSACCIONES
+// =====================================================
 export const getTransactions = async (req, res) => {
   try {
-    const transactions = await Transaction.find()
-      .populate("originAccount", "accountNumber")
-      .populate("destinationAccount", "accountNumber")
-      .sort({ date: -1 });
+    const isAdmin = req.user.roles.includes("Admin");
 
-    res.json(transactions);
+    let transactions;
+
+    if (isAdmin) {
+      // Admin ve todas
+      transactions = await Transaction.find()
+        .populate("originAccount", "accountNumber")
+        .populate("destinationAccount", "accountNumber")
+        .sort({ date: -1 });
+    } else {
+      // Cliente solo ve las transacciones de sus cuentas
+      const userAccounts = await Account.find({ userId: req.user.id }).select("_id");
+      const accountIds = userAccounts.map(a => a._id);
+
+      transactions = await Transaction.find({
+        $or: [
+          { originAccount: { $in: accountIds } },
+          { destinationAccount: { $in: accountIds } }
+        ]
+      })
+        .populate("originAccount", "accountNumber")
+        .populate("destinationAccount", "accountNumber")
+        .sort({ date: -1 });
+    }
+
+    res.json({ success: true, total: transactions.length, transactions });
+
   } catch (error) {
-    res.status(500).json({
-      message: "Error al obtener transferencias",
-      error: error.message
-    });
+    res.status(500).json({ message: "Error al obtener transacciones", error: error.message });
   }
 };
 
-/**
- * Realizar una transferencia entre cuentas
- */
+// =====================================================
+// TRANSFERENCIA
+// =====================================================
 export const transfer = async (req, res) => {
   try {
-    // 1. Aquí capturamos exactamente lo que mandas en Postman
     let { fromAccountId, toAccountId, amount } = req.body;
 
-    // 2. La validación ahora busca los nombres que TÚ quieres
     if (!fromAccountId || !toAccountId || !amount) {
-      return res.status(400).json({
-        message: "fromAccountId, toAccountId y amount son obligatorios",
-      });
+      return res.status(400).json({ message: "fromAccountId, toAccountId y amount son obligatorios" });
     }
 
     amount = Number(amount);
@@ -47,31 +62,36 @@ export const transfer = async (req, res) => {
       return res.status(404).json({ message: "Una o ambas cuentas no existen" });
     }
 
-    if (fromAccount.balance < amount) {
-      return res.status(400).json({ message: "Fondos insuficientes" });
+    // Verificar que la cuenta origen pertenece al usuario autenticado
+    if (!req.user.roles.includes("Admin") && fromAccount.userId !== req.user.id) {
+      return res.status(403).json({ message: "No tienes permiso sobre la cuenta origen" });
     }
 
-    // 3. Lógica de dinero
+    if (fromAccount.balance < amount) {
+      return res.status(400).json({ message: "Fondos insuficientes", balance: fromAccount.balance });
+    }
+
     fromAccount.balance -= amount;
     toAccount.balance += amount;
 
     await fromAccount.save();
     await toAccount.save();
 
-    // 4. Guardar la transacción (mapeando a los nombres de tu esquema de Mongoose)
     const transferencia = new Transaction({
       type: "TRANSFERENCIA",
       amount,
-      originAccount: fromAccountId, 
+      originAccount: fromAccountId,
       destinationAccount: toAccountId,
     });
 
     await transferencia.save();
 
     res.json({
+      success: true,
       message: "Transferencia realizada correctamente",
       transferencia,
     });
+
   } catch (error) {
     res.status(500).json({ message: "Error al transferir dinero", error: error.message });
   }

@@ -1,19 +1,18 @@
 import jwt from "jsonwebtoken";
 
+// Claims de .NET (nombres completos de Microsoft)
+const ROLE_CLAIM = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+const EMAIL_CLAIM = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress";
+
 /**
- * Middleware para validar JWT en el Sistema Bancario
- * Se espera el token en el header:
- * Authorization: Bearer <TOKEN>
+ * Middleware principal - Valida JWT generado por .NET
+ * Header esperado: Authorization: Bearer <TOKEN>
  */
 export const validateJWT = (req, res, next) => {
-  // Configuración del JWT desde variables de entorno
-  const jwtConfig = {
-    secret: process.env.JWT_SECRET,       // Obligatorio
-    issuer: process.env.JWT_ISSUER || null,   // Opcional
-    audience: process.env.JWT_AUDIENCE || null, // Opcional
-  };
+  const secret = process.env.JWT_SECRET;
+  console.log('SECRET CARGADO:', JSON.stringify(secret));
 
-  if (!jwtConfig.secret) {
+  if (!secret) {
     console.error("Error JWT: JWT_SECRET no definido en .env");
     return res.status(500).json({
       success: false,
@@ -21,10 +20,11 @@ export const validateJWT = (req, res, next) => {
     });
   }
 
-  // Extraer token del header Authorization
-  const token =
-    req.header("Authorization")?.replace("Bearer ", "") ||
-    req.header("x-token"); // soporte opcional para x-token
+  // Extraer token del header
+  const authHeader = req.header("Authorization");
+  const token = authHeader?.startsWith("Bearer ")
+    ? authHeader.slice(7)
+    : req.header("x-token");
 
   if (!token) {
     return res.status(401).json({
@@ -35,23 +35,27 @@ export const validateJWT = (req, res, next) => {
   }
 
   try {
-    // Opciones de verificación del JWT
-    const verifyOptions = {};
-    if (jwtConfig.issuer) verifyOptions.issuer = jwtConfig.issuer;
-    if (jwtConfig.audience) verifyOptions.audience = jwtConfig.audience;
-
-    // Decodificar el token
-    const decoded = jwt.verify(token, jwtConfig.secret, verifyOptions);
-
-    // Asignar datos del usuario al request
-    req.user = {
-      id: decoded.sub,               // ID del usuario
-      role: decoded.role || "User",  // Rol por defecto
-      iat: decoded.iat,              // Emitido en
-      jti: decoded.jti || null,      // ID único del token (opcional)
+    const verifyOptions = {
+      issuer: process.env.JWT_ISSUER,
+      audience: process.env.JWT_AUDIENCE,
     };
 
-    next(); // Token válido, continuar al controlador
+    const decoded = jwt.verify(token, secret, verifyOptions);
+
+    // Extraer roles (puede ser string o array en .NET)
+    const rawRoles = decoded[ROLE_CLAIM] || decoded.role || "User";
+    const roles = Array.isArray(rawRoles) ? rawRoles : [rawRoles];
+
+    // Datos del usuario disponibles en req.user
+    req.user = {
+      id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || decoded.sub,
+      email: decoded[EMAIL_CLAIM] || decoded.email || null,
+      roles,
+      role: roles[0], // Compatibilidad con código existente
+      jti: decoded.jti || null,
+    };
+
+    next();
   } catch (error) {
     console.error("Error validando JWT:", error.message);
 
@@ -77,4 +81,64 @@ export const validateJWT = (req, res, next) => {
       error: "TOKEN_VALIDATION_ERROR",
     });
   }
+};
+
+/**
+ * Middleware de autorización por roles
+ * Uso: requireRole('Admin') o requireRole('Admin', 'Cliente')
+ */
+export const requireRole = (...allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "No autenticado",
+        error: "NOT_AUTHENTICATED",
+      });
+    }
+
+    const hasRole = req.user.roles.some((r) => allowedRoles.includes(r));
+
+    if (!hasRole) {
+      return res.status(403).json({
+        success: false,
+        message: `Acceso denegado. Roles requeridos: ${allowedRoles.join(", ")}`,
+        error: "FORBIDDEN",
+        yourRoles: req.user.roles,
+      });
+    }
+
+    next();
+  };
+};
+
+/**
+ * JWT opcional - No bloquea si no hay token
+ */
+export const optionalJWT = (req, res, next) => {
+  const secret = process.env.JWT_SECRET;
+  const authHeader = req.header("Authorization");
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (!token || !secret) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, secret, {
+      issuer: process.env.JWT_ISSUER,
+      audience: process.env.JWT_AUDIENCE,
+    });
+    const rawRoles = decoded[ROLE_CLAIM] || decoded.role || "User";
+    req.user = {
+      id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || decoded.sub,
+      email: decoded[EMAIL_CLAIM] || decoded.email || null,
+      roles: Array.isArray(rawRoles) ? rawRoles : [rawRoles],
+    };
+  } catch {
+    req.user = null;
+  }
+
+  next();
 };
