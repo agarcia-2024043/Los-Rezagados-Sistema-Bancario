@@ -17,7 +17,6 @@ export const getTransactions = async (req, res) => {
         .populate("destinationAccount", "accountNumber")
         .sort({ date: -1 });
     } else {
-      // Cliente solo ve las transacciones de sus cuentas
       const userAccounts = await Account.find({ userId: req.user.id }).select("_id");
       const accountIds = userAccounts.map(a => a._id);
 

@@ -51,7 +51,7 @@ export const validateJWT = (req, res, next) => {
       id: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] || decoded.sub,
       email: decoded[EMAIL_CLAIM] || decoded.email || null,
       roles,
-      role: roles[0], // Compatibilidad con código existente
+      role: roles[0], 
       jti: decoded.jti || null,
     };
 
@@ -83,10 +83,7 @@ export const validateJWT = (req, res, next) => {
   }
 };
 
-/**
- * Middleware de autorización por roles
- * Uso: requireRole('Admin') o requireRole('Admin', 'Cliente')
- */
+
 export const requireRole = (...allowedRoles) => {
   return (req, res, next) => {
     if (!req.user) {
@@ -112,9 +109,7 @@ export const requireRole = (...allowedRoles) => {
   };
 };
 
-/**
- * JWT opcional - No bloquea si no hay token
- */
+
 export const optionalJWT = (req, res, next) => {
   const secret = process.env.JWT_SECRET;
   const authHeader = req.header("Authorization");

@@ -10,14 +10,14 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    // AQUÍ ESTABA EL ERROR:
+
     originAccount: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account' // <-- Debe ser un String entre comillas
+        ref: 'Account' 
     },
     destinationAccount: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Account' // <-- Debe ser un String entre comillas
+        ref: 'Account' 
     },
     date: {
         type: Date,

@@ -8,7 +8,6 @@ import {
 import { validateJWT, requireRole } from '../Middleware/validate-jwt.js';
 
 const router = Router();
-
 // Todas las rutas de cuentas requieren autenticación
 router.use(validateJWT);
 
