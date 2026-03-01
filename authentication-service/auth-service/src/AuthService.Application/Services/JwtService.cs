@@ -1,52 +1,38 @@
-using AuthService.Application.Interfaces;
-using AuthService.Domain.Entities;
-using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Security.Cryptography;
+using AuthService.Domain.Entities;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 
-namespace AuthService.Application.Services;
+namespace AuthService.Application.Interfaces;
 
 public class JwtService : IJwtService
 {
-    private readonly string _key;
-    private readonly string _issuer;
-    private readonly string _audience;
-    private readonly int _expiresMinutes;
+    private readonly IConfiguration _config;
 
-    public JwtService(string key, string issuer, string audience, int expiresMinutes)
+    public JwtService(IConfiguration config)
     {
-        _key = key;
-        _issuer = issuer;
-        _audience = audience;
-        _expiresMinutes = expiresMinutes <= 0 ? 60 : expiresMinutes;
+        _config = config;
     }
 
     public string GenerateToken(User user)
     {
-        var keyBytes = Encoding.UTF8.GetBytes(_key);
-        if (keyBytes.Length < 32)
-            throw new Exception("Jwt key debe tener mínimo 32 caracteres");
-
-        var creds = new SigningCredentials(
-            new SymmetricSecurityKey(keyBytes),
-            SecurityAlgorithms.HmacSha256
-        );
-
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.Id),
-            new(JwtRegisteredClaimNames.UniqueName, user.Email), 
-            new("role", user.Role),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, user.MainRole)
         };
 
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
         var token = new JwtSecurityToken(
-            _issuer,
-            _audience,
+            _config["Jwt:Issuer"],
+            _config["Jwt:Audience"],
             claims,
-            expires: DateTime.UtcNow.AddMinutes(_expiresMinutes),
+            expires: DateTime.UtcNow.AddHours(2),
             signingCredentials: creds
         );
 
@@ -55,9 +41,6 @@ public class JwtService : IJwtService
 
     public string GenerateRefreshToken()
     {
-        var randomNumber = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
+        return Guid.NewGuid().ToString();
     }
 }

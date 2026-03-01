@@ -1,47 +1,27 @@
-import { Account } from "../models/account.model.js";
-import { User } from "../models/user.model.js";
-// Generar número de cuenta simple
-const generarNumeroCuenta = () => {
-    return "ACC" + Math.floor(100000 + Math.random() * 900000);
-};
+import { Account } from "../Models/account.model.js";
 
-// =====================================================
-// CREAR CUENTA
-// =====================================================
+const generarNumeroCuenta = () => "ACC" + Math.floor(100000 + Math.random() * 900000);
+
 export const createAccount = async (req, res) => {
     try {
-        const { userId, type, initialBalance } = req.body;
+        const userId = req.user.id;
+        const { type, initialBalance } = req.body;
 
-        if (!userId || !type) {
-            return res.status(400).json({ 
-                message: "userId y type son obligatorios" 
-            });
+        if (!type) {
+            return res.status(400).json({ message: "El campo type es obligatorio" });
         }
 
-        if (type !== "ahorro" && type !== "monetaria") {
-            return res.status(400).json({ 
-                message: "El tipo debe ser ahorro o monetaria" 
-            });
+        if (!["ahorro", "monetaria", "corriente"].includes(type)) {
+            return res.status(400).json({ message: "El tipo debe ser: ahorro, monetaria o corriente" });
         }
 
-        if (initialBalance && initialBalance < 0) {
-            return res.status(400).json({ 
-                message: "El saldo inicial no puede ser negativo" 
-            });
-        }
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ 
-                message: "Usuario no encontrado" 
-            });
+        if (initialBalance !== undefined && initialBalance < 0) {
+            return res.status(400).json({ message: "El saldo inicial no puede ser negativo" });
         }
 
         const cuentaExistente = await Account.findOne({ userId, type });
         if (cuentaExistente) {
-            return res.status(400).json({ 
-                message: "El usuario ya tiene una cuenta de este tipo" 
-            });
+            return res.status(400).json({ message: "Ya tienes una cuenta de este tipo" });
         }
 
         const nuevaCuenta = new Account({
@@ -52,7 +32,7 @@ export const createAccount = async (req, res) => {
         });
 
         await nuevaCuenta.save();
-        
+
         res.status(201).json({
             success: true,
             message: "Cuenta creada exitosamente",
@@ -61,128 +41,70 @@ export const createAccount = async (req, res) => {
 
     } catch (error) {
         console.error("Error al crear cuenta:", error);
-        res.status(500).json({ 
-            message: "Error al crear cuenta",
-            error: error.message 
-        });
+        res.status(500).json({ message: "Error al crear cuenta", error: error.message });
     }
 };
 
-// =====================================================
-// OBTENER TODAS LAS CUENTAS
-// =====================================================
 export const getAccounts = async (req, res) => {
     try {
-        const accounts = await Account.find().populate("userId", "name email");
-        res.json({
-            success: true,
-            total: accounts.length,
-            accounts
-        });
+        const isAdmin = req.user.roles.includes("Admin");
+        const query = isAdmin ? {} : { userId: req.user.id };
+        const accounts = await Account.find(query).sort({ createdAt: -1 });
+
+        res.json({ success: true, total: accounts.length, accounts });
     } catch (error) {
         console.error("Error al obtener cuentas:", error);
-        res.status(500).json({ 
-            message: "Error al obtener cuentas" 
-        });
+        res.status(500).json({ message: "Error al obtener cuentas" });
     }
 };
 
-// =====================================================
-// DEPOSITAR DINERO
-// =====================================================
 export const deposit = async (req, res) => {
     try {
         const { accountId, amount } = req.body;
 
-        if (!accountId || !amount) {
-            return res.status(400).json({ 
-                message: "accountId y amount son obligatorios" 
-            });
-        }
-
-        if (amount <= 0) {
-            return res.status(400).json({ 
-                message: "El monto debe ser mayor a 0" 
-            });
-        }
+        if (!accountId || !amount) return res.status(400).json({ message: "accountId y amount son obligatorios" });
+        if (amount <= 0) return res.status(400).json({ message: "El monto debe ser mayor a 0" });
 
         const account = await Account.findById(accountId);
-        if (!account) {
-            return res.status(404).json({ 
-                message: "Cuenta no encontrada" 
-            });
+        if (!account) return res.status(404).json({ message: "Cuenta no encontrada" });
+
+        if (!req.user.roles.includes("Admin") && account.userId !== req.user.id) {
+            return res.status(403).json({ message: "No tienes permiso sobre esta cuenta" });
         }
 
-        account.balance += amount;
+        account.balance += Number(amount);
         await account.save();
 
-        res.json({
-            success: true,
-            message: "Depósito realizado exitosamente",
-            account: {
-                id: account._id,
-                accountNumber: account.accountNumber,
-                balance: account.balance
-            }
-        });
+        res.json({ success: true, message: "Depósito realizado exitosamente", account: { id: account._id, accountNumber: account.accountNumber, balance: account.balance } });
     } catch (error) {
-        console.error("Error al depositar:", error);
-        res.status(500).json({ 
-            message: "Error al depositar" 
-        });
+        res.status(500).json({ message: "Error al depositar" });
     }
 };
 
-// =====================================================
-// RETIRAR DINERO
-// =====================================================
+
 export const withdraw = async (req, res) => {
     try {
         const { accountId, amount } = req.body;
 
-        if (!accountId || !amount) {
-            return res.status(400).json({ 
-                message: "accountId y amount son obligatorios" 
-            });
-        }
-
-        if (amount <= 0) {
-            return res.status(400).json({ 
-                message: "El monto debe ser mayor a 0" 
-            });
-        }
+        if (!accountId || !amount) return res.status(400).json({ message: "accountId y amount son obligatorios" });
+        if (amount <= 0) return res.status(400).json({ message: "El monto debe ser mayor a 0" });
 
         const account = await Account.findById(accountId);
-        if (!account) {
-            return res.status(404).json({ 
-                message: "Cuenta no encontrada" 
-            });
+        if (!account) return res.status(404).json({ message: "Cuenta no encontrada" });
+
+        if (!req.user.roles.includes("Admin") && account.userId !== req.user.id) {
+            return res.status(403).json({ message: "No tienes permiso sobre esta cuenta" });
         }
 
         if (account.balance < amount) {
-            return res.status(400).json({ 
-                message: "Fondos insuficientes",
-                balanceActual: account.balance,
-                montoSolicitado: amount
-            });
+            return res.status(400).json({ message: "Fondos insuficientes", balanceActual: account.balance });
         }
 
-        account.balance -= amount;
+        account.balance -= Number(amount);
         await account.save();
 
-        res.json({
-            success: true,
-            message: "Retiro realizado exitosamente",
-            account: {
-                id: account._id,
-                accountNumber: account.accountNumber,
-                balance: account.balance
-            }
-        });
+        res.json({ success: true, message: "Retiro realizado exitosamente", account: { id: account._id, accountNumber: account.accountNumber, balance: account.balance } });
     } catch (error) {
-        console.error("Error al retirar:", error);
-        res.status(500).json({ 
-            message: "Error al retirar" 
-        });
+        res.status(500).json({ message: "Error al retirar" });
     }
 };

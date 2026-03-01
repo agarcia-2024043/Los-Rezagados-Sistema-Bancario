@@ -1,10 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors"; 
+import cors from "cors";
 import { connectDB } from "./Config/database.js";
 
-import authRoutes from "./Routes/authroutes.js"; 
-import userRoutes from "./Routes/user.routes.js";
 import accountRoutes from "./Routes/account.routes.js";
 import transactionRoutes from "./Routes/transaction.routes.js";
 
@@ -12,23 +10,23 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors()); 
-app.use(express.json({ limit: "10mb" })); 
-app.use(express.urlencoded({ extended: true })); 
+app.use(cors());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 connectDB();
 
 app.get("/", (req, res) => {
-    res.json({ message: "Sistema Bancario funcionando " });
+    res.json({ 
+        message: "Sistema Bancario - Node.js API",
+        note: "Autenticación manejada por .NET AuthService"
+    });
 });
 
-app.use("/auth", authRoutes);
-
-app.use("/users", userRoutes);
 app.use("/accounts", accountRoutes);
 app.use("/transactions", transactionRoutes);
 
-app.use((req, res, next) => {
+app.use((req, res) => {
     res.status(404).json({ message: "Ruta no encontrada" });
 });
 
@@ -38,3 +36,5 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
+

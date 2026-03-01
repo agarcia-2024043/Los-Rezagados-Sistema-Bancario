@@ -1,17 +1,18 @@
 import mongoose from "mongoose";
 
 const accountSchema = new mongoose.Schema({
-    userId: {  
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+
+    userId: {
+        type: String,
+        required: true,
+        index: true
     },
     accountNumber: {
         type: String,
         required: true,
         unique: true
     },
-    type: {  
+    type: {
         type: String,
         enum: ['ahorro', 'monetaria', 'corriente'],
         required: true
@@ -22,5 +23,6 @@ const accountSchema = new mongoose.Schema({
         min: 0
     }
 }, { timestamps: true });
+
 
 export const Account = mongoose.model("Account", accountSchema);
