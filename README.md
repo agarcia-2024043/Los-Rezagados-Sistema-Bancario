@@ -91,43 +91,149 @@ volumes:
 
 ---
 
-## Rutas Principales
+## Prueba de Endpoints en Postman
 
-### Autenticación (Públicas)
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| `POST` | `/api/v1/auth/register` | Registro de nuevos clientes/empleados |
-| `POST` | `/api/v1/auth/login` | Login y obtención de Token JWT |
-
-### Operaciones Bancarias (Protegidas)
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| `GET` | `/api/v1/accounts` | Ver estado de cuentas propias |
-| `POST` | `/api/v1/transactions/deposit` | Realizar un depósito |
-| `POST` | `/api/v1/transactions/transfer` | Transferencia entre cuentas |
-| `GET` | `/api/v1/currency/convert` | Consultar conversión de divisas |
+> **Importante:** Para todas las rutas protegidas de Node.js, debes incluir el token JWT obtenido en el login de .NET en el header `Authorization: Bearer <token>`.
 
 ---
 
-## Estructura del Repositorio
+### Authentication Service — .NET 8 (`localhost:5109`)
+
+#### 1. Registrar Usuario
+```
+POST http://localhost:5109/api/auth/register
+```
+```json
+{
+  "username": "rezagados",
+  "email": "lrezagados@kinal.edu.gt",
+  "password": "Admin123!",
+  "firstName": "Reza",
+  "lastName": "Gados"
+}
+```
+
+#### 2. Login (obtener Token JWT)
+```
+POST http://localhost:5109/api/auth/login
+```
+```json
+{
+  "email": "lrezagados@kinal.edu.gt",
+  "password": "Admin123!"
+}
+```
+> Copia el token devuelto — lo necesitarás en todas las rutas siguientes.
+
+#### 3. Ver perfil y roles
+```
+GET http://localhost:5109/api/auth/me
+```
+> Requiere token en el header: `Authorization: Bearer <token>`
+
+---
+
+### Banking Services — Node.js (`localhost:3000`)
+
+> Todas las rutas requieren el token del login en el header: `Authorization: Bearer <token>`
+
+#### 4. Crear Cuenta de Ahorro
+```
+POST http://localhost:3000/accounts/create
+```
+```json
+{
+  "type": "ahorro"
+}
+```
+
+#### 5. Crear Cuenta Monetaria
+```
+POST http://localhost:3000/accounts/create
+```
+```json
+{
+  "type": "monetaria"
+}
+```
+
+#### 6. Ver Cuentas
+```
+GET http://localhost:3000/accounts
+```
+
+#### 7. Depositar Dinero
+```
+POST http://localhost:3000/accounts/deposit
+```
+```json
+{
+  "accountId": "69a3c924bc757346fa89ff01",
+  "amount": 5000
+}
+```
+> Reemplaza `accountId` con el ID de tu cuenta.
+
+#### 8. Retirar Dinero
+```
+POST http://localhost:3000/accounts/withdraw
+```
+```json
+{
+  "accountId": "69a3c924bc757346fa89ff01",
+  "amount": 5000
+}
+```
+> Reemplaza `accountId` con el ID de tu cuenta.
+
+#### 9. Transferir Dinero
+```
+POST http://localhost:3000/transactions/transfer
+```
+```json
+{
+  "fromAccountId": "69a3c924bc757346fa89ff01",
+  "toAccountId": "69a3c863bc757346fa89fefd",
+  "amount": 500
+}
+```
+> Reemplaza ambos IDs con los de las cuentas origen y destino.
+
+#### 10. Historial de Transacciones
+```
+GET http://localhost:3000/transactions
+```
+
+---
+
+##  Estructura del Repositorio
 
 ```plaintext
 Los-Rezagados-Sistema-Bancario
 │
 ├── authentication-service/   # Microservicio en .NET 8 (Auth & Users)
-│   ├── src/
-│   │   ├── AuthService.Api/
-│   │   ├── AuthService.Persistence/ # Mapeo de DB (PostgreSQL)
-│   │   └── AuthService.Domain/
-│   └── docker-compose.yml
+│   ├── auth-service/
+│      ├── src/
+│              ├── AuthService.Api/
+│              ├── AuthService.Application/
+│              ├── AuthService.Persistence/ # Mapeo de DB (PostgreSQL)
+│              └── AuthService.Domain/
+│   ├── pg/
+│       └── docker-compose.yml
+│   
+
+├── ├── node_modules          # Microservicios en Node.js
+│   └── src/
+│       ├── Config/
+│       ├── Controllers/
+│       ├── Middleware/
+│       ├── Models/
+│       ├── Routes/
+│       ├── services/
+│       ├── app.js/
+│       └── server.js/
 │
-├── banking-services/         # Microservicios en Node.js
-│   ├── account-service/
-│   └── transaction-service/
-│
-└── .gitignore                # Configuración para omitir binarios (bin/obj)
+
 ```
 
 ---
@@ -138,12 +244,13 @@ Los-Rezagados-Sistema-Bancario
 |---|---|
 | Arquitectura | 100% Implementada |
 | Seguridad (JWT & RBAC) | Funcional |
-| Base de Datos (Docker) |  Migraciones ejecutadas y contenedor listo |
+| Base de Datos (Docker) | Migraciones ejecutadas y contenedor listo |
+| Base de Datos (MongoDB) | Migraciones ejecutadas  |
 | Limpieza de Código | 100% libre de archivos temporales y binarios |
 
 ---
 
-##  Autores
+## Autores
 
 **Equipo:** Los Rezagados
 **Curso:** Taller de IN6AM — Jornada Matutina
