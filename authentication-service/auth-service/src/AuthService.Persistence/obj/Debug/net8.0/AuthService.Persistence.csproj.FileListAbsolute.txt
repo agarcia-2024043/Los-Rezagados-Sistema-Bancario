@@ -28,3 +28,4 @@ C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication
 C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Persistence\obj\Debug\net8.0\refint\AuthService.Persistence.dll
 C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Persistence\obj\Debug\net8.0\AuthService.Persistence.pdb
 C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Persistence\obj\Debug\net8.0\ref\AuthService.Persistence.dll
+C:\Users\Angelo Garcia\Desktop\git\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Persistence\obj\Debug\net8.0\AuthService.Persistence.sourcelink.json

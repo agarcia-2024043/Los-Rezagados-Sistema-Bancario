@@ -45,7 +45,7 @@ namespace AuthService.Api.Controllers
 
                 if (canConnect)
                 {
-                    var rolesCount = await _dbContext.Roles.CountAsync();
+                    var rolesCount = await _dbContext.Role.CountAsync();
                     
                     healthStatus = healthStatus with 
                     { 
