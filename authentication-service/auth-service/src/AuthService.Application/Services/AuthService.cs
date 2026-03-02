@@ -17,36 +17,45 @@ public class AuthService : IAuthService
         _emailService = emailService;
     }
 
-    public async Task<AuthResponseDto> Login(LoginDto dto)
+   public async Task<AuthResponseDto> Login(LoginDto dto)
+{
+    var user = await _users.GetByEmailAsync(dto.Email);
+
+    if (user == null)
+        return new AuthResponseDto { Success = false, Message = "Credenciales inválidas" };
+
+    // CAMBIO: IsBlocked -> IsLocked
+    if (user.IsLocked) 
+        return new AuthResponseDto { Success = false, Message = "Cuenta bloqueada temporalmente." };
+
+    if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash)) 
     {
-        var user = await _users.GetByEmailAsync(dto.Email);
-
-        if (user == null)
-            return new AuthResponseDto { Success = false, Message = "Credenciales inválidas" };
-
-        if (user.IsBlocked) 
-            return new AuthResponseDto { Success = false, Message = "Cuenta bloqueada temporalmente. Contacte a soporte." };
-
-        if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash)) 
-        {
-            user.FailedAttempts++;
-            if (user.FailedAttempts >= 5) user.IsBlocked = true;
-            await _users.UpdateAsync(user);
-            return new AuthResponseDto { Success = false, Message = "Credenciales inválidas" };
-        }
-
-        user.FailedAttempts = 0;
-        user.LastLogin = DateTime.UtcNow;
+        // CAMBIO: FailedAttempts -> FailedLoginAttempts
+        user.FailedLoginAttempts++;
+        if (user.FailedLoginAttempts >= 5) user.IsLocked = true; 
+        
         await _users.UpdateAsync(user);
+        return new AuthResponseDto { Success = false, Message = "Credenciales inválidas" };
+    }
+
+    user.FailedLoginAttempts = 0; // Resetear intentos
+    user.LastLogin = DateTime.UtcNow;
+    await _users.UpdateAsync(user);
 
         return new AuthResponseDto
-        {
-            Success = true,
-            Token = _jwt.GenerateToken(user),
-            RefreshToken = _jwt.GenerateRefreshToken(),
-            User = new UserDetailsDto { Id = user.Id, Email = user.Email, Role = user.Role }
-        };
-    }
+    {
+        Success = true,
+        Token = _jwt.GenerateToken(user),
+        RefreshToken = _jwt.GenerateRefreshToken(),
+        User = new UserDetailsDto 
+        { 
+            // CAMBIO AQUÍ: Agrega .ToString()
+            Id = user.Id.ToString(), 
+            Email = user.Email, 
+            Role = user.MainRole 
+        }
+    };
+}
 
     public async Task<AuthResponseDto> Register(RegisterDto dto)
     {
@@ -56,14 +65,17 @@ public class AuthService : IAuthService
         if (await _users.ExistsAsync(dto.Email)) 
             return new AuthResponseDto { Success = false, Message = "El email ya está registrado" };
 
-        var newUser = new User
-        {
-            Email = dto.Email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password, 12),
-            Role = "Cliente", 
-            EmailConfirmed = false,
-            VerificationToken = Guid.NewGuid().ToString()
-        };
+            var newUser = new User
+    {
+        Email = dto.Email,
+        PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password, 12),
+        EmailConfirmed = false,
+        VerificationToken = Guid.NewGuid().ToString(),
+        UserRoles = new List<UserRole> 
+        { 
+            new UserRole { /* Aquí iría el ID del rol 'Cliente' */ } 
+        }
+    };
 
         await _users.AddAsync(newUser);
         await _emailService.SendEmailAsync(newUser.Email, "Bienvenido", "Verifique su cuenta bancaria."); 

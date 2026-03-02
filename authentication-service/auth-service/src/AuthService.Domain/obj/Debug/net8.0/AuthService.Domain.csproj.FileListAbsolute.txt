@@ -20,3 +20,4 @@ C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication
 C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Domain\obj\Debug\net8.0\refint\AuthService.Domain.dll
 C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Domain\obj\Debug\net8.0\AuthService.Domain.pdb
 C:\Users\Angelo Garcia\Desktop\say\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Domain\obj\Debug\net8.0\ref\AuthService.Domain.dll
+C:\Users\Angelo Garcia\Desktop\git\Los-Rezagados-Sistema-Bancario\authentication-service\auth-service\src\AuthService.Domain\obj\Debug\net8.0\AuthService.Domain.sourcelink.json
