@@ -1,228 +1,149 @@
-Sistema Bancario - Proyecto de Gestión Financiera
+# Sistema Bancario - Los Rezagados
 
-Descripción del Proyecto
-Sistema bancario integral diseñado para la gestión eficiente y segura de operaciones financieras básicas. Este proyecto establece una planificación organizada para el desarrollo de una solución bancaria que contempla desde la administración de cuentas hasta operaciones de conversión de divisas, priorizando la seguridad y la experiencia del usuario.
+> **Nota del Proyecto**
+> Este sistema fue desarrollado con fines didácticos para el curso de **Taller de IN6AM**. Implementa una arquitectura moderna de microservicios, priorizando la seguridad financiera, la escalabilidad y las mejores prácticas en el manejo de datos bancarios.
 
-Objetivo General
-Desarrollar un sistema bancario que permita la gestión eficiente y segura de las operaciones financieras básicas de los usuarios, garantizando la protección de la información y el control de accesos mediante la asignación de roles, basándose en procesos del sistema financiero del mundo real.
+---
 
-Propósito del Proyecto
-Este documento establece la planificación y organización del desarrollo del sistema bancario, definiendo:
+## Descripción General
 
-Estructura de trabajo del equipo
--Metodología de desarrollo a utilizar
--Distribución de responsabilidades
--Alcance y funcionalidades del sistema
+El **Sistema Bancario** es una solución integral para la gestión de operaciones financieras. Combina un potente servicio de autenticación desarrollado en **.NET 8** con servicios de negocio en **Node.js**, permitiendo una gestión segura de usuarios, cuentas, transacciones y conversión de divisas.
 
-Objetivos Específicos
-Seguridad y Control de Acceso
+---
 
--Garantizar la seguridad de los usuarios y la protección de su información financiera
--Implementar un sistema robusto de control de accesos basado en roles
--Asegurar la confidencialidad e integridad de los datos bancarios
+## Arquitectura del Sistema
 
-Gestión de Cuentas Bancarias
+El sistema utiliza una arquitectura de **microservicios independientes**:
 
--Permitir el manejo completo de cuentas bancarias
--Implementar procesos basados en operaciones del sistema financiero real
--Facilitar la administración de múltiples cuentas por usuario
+### Authentication Service (.NET 8)
+Es el núcleo de seguridad del sistema.
 
-Operaciones Financieras
-El sistema contemplará las siguientes operaciones fundamentales:
+| Característica | Detalle |
+|---|---|
+| **Registro e Inicio de Sesión** | Manejo de credenciales con BCrypt |
+| **Seguridad** | Control de acceso basado en roles (RBAC) |
+| **Tokens** | Generación y validación de JWT para proteger rutas |
+| **Persistencia** | Conexión robusta a PostgreSQL mediante Entity Framework Core |
 
--Depósitos: Registro de ingresos a cuentas
--Retiros: Procesamiento de extracciones de fondos
--Consultas de saldo: Visualización de información de cuentas en tiempo real
--Transferencias entre cuentas: Movimientos de fondos de manera confiable y segura
+### Banking & Core Services (Node.js)
 
-Conversión de Divisas
+- **Gestión de Cuentas:** Creación y administración de cuentas de ahorro y corrientes.
+- **Transacciones:** Depósitos, retiros y transferencias seguras.
+- **Divisas:** Módulo de conversión de moneda con tasas en tiempo real.
 
--Implementación de funcionalidad de conversión de divisas
--Permitir operaciones financieras en diferentes monedas
--Actualización de tasas de cambio
+---
 
-Arquitectura del Sistema
-Módulos Principales
-1. Módulo de Autenticación y Autorización
+## Tecnologías Utilizadas
 
--Sistema de login/logout
--Gestión de sesiones de usuario
--Control de acceso basado en roles (RBAC)
+### Backend & Base de Datos
 
-2. Módulo de Gestión de Usuarios
+| Tecnología | Uso |
+|---|---|
+| **ASP.NET Core 8** | Microservicio de identidad |
+| **Node.js & Express** | Servicios de negocio |
+| **PostgreSQL** | Base de datos relacional para usuarios y roles |
+| **MongoDB** | Almacenamiento para transacciones y reportes |
+| **EF Core** | ORM para el mapeo de datos en .NET |
 
--Registro de nuevos usuarios
--Perfil de usuario
--Administración de credenciales
+### Herramientas
 
-3. Módulo de Cuentas Bancarias
+| Herramienta | Uso |
+|---|---|
+| **Docker** | Contenerización de servicios y base de datos |
+| **Git / GitHub** | Control de versiones |
+| **Postman** | Pruebas de endpoints |
 
--Creación de cuentas
--Gestión de información de cuentas
--Tipos de cuenta (ahorro, corriente, etc.)
+---
 
-4. Módulo de Transacciones
+## Configuración con Docker (Base de Datos)
 
--Depósitos
--Retiros
--Transferencias internas
--Transferencias externas
--Historial de transacciones
+Para facilitar la revisión y el despliegue, el proyecto incluye un archivo `docker-compose.yml` para levantar la base de datos PostgreSQL de forma automática.
 
-5. Módulo de Conversión de Divisas
+### Pasos para levantar la DB
 
--Tasas de cambio en tiempo real
--Conversión entre divisas
--Historial de conversiones
+1. Ubicarse en la raíz del proyecto.
+2. Ejecutar el siguiente comando:
 
-6. Módulo de Reportes
+```bash
+docker-compose up -d
+```
 
--Estado de cuenta
--Reportes de transacciones
--Análisis de movimientos
+### Configuración del contenedor
 
-🛠️ Metodología de Desarrollo
-SCRUM
-El proyecto se desarrollará utilizando la metodología SCRUM para garantizar:
+```yaml
+version: '3.8'
 
--Entregas incrementales de funcionalidades
--Adaptabilidad a cambios de requisitos
--Transparencia en el avance del proyecto
--Colaboración continua del equipo
--Mejora continua a través de retrospectivas
+services:
+  db:
+    image: postgres:latest
+    container_name: bancario-auth-db
+    environment:
+      POSTGRES_PASSWORD: SystemBank0101@reza
+      POSTGRES_DB: BankAuthDb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-Roles SCRUM
+volumes:
+  postgres_data:
+```
 
--Product Owner: Define las prioridades y requisitos del sistema
--Scrum Master: Facilita el proceso y elimina impedimentos
--Development Team: Equipo multifuncional responsable del desarrollo
+---
 
-Artefactos SCRUM
+## Rutas Principales
 
--Product Backlog: Lista priorizada de todas las funcionalidades
--Sprint Backlog: Funcionalidades seleccionadas para el sprint actual
--Incremento: Versión funcional del producto al final de cada sprint
+### Autenticación (Públicas)
 
-Ceremonias SCRUM
+| Método | Ruta | Descripción |
+|---|---|---|
+| `POST` | `/api/v1/auth/register` | Registro de nuevos clientes/empleados |
+| `POST` | `/api/v1/auth/login` | Login y obtención de Token JWT |
 
--Sprint Planning: Planificación de cada sprint (2-4 semanas)
--Daily Standup: Reunión diaria de sincronización (15 min)
--Sprint Review: Demostración del incremento desarrollado
--Sprint Retrospective: Reflexión y mejora del proceso
+### Operaciones Bancarias (Protegidas)
 
-Seguridad
-Principios de Seguridad
+| Método | Ruta | Descripción |
+|---|---|---|
+| `GET` | `/api/v1/accounts` | Ver estado de cuentas propias |
+| `POST` | `/api/v1/transactions/deposit` | Realizar un depósito |
+| `POST` | `/api/v1/transactions/transfer` | Transferencia entre cuentas |
+| `GET` | `/api/v1/currency/convert` | Consultar conversión de divisas |
 
--Autenticación robusta: Verificación de identidad de usuarios
--Autorización: Control de acceso basado en roles y permisos
--Encriptación: Protección de datos sensibles en tránsito y en reposo
--Auditoría: Registro de todas las operaciones críticas
--Validación de datos: Prevención de inyecciones y ataques comunes
+---
 
-Roles de Usuario
-RolPermisosDescripciónAdministradorAcceso completo al sistemaGestión de usuarios, configuración del sistemaEmpleado BancarioOperaciones de cuenta, consultasAtención al cliente, procesamiento de transaccionesClienteOperaciones propiasConsulta de saldo, transferencias, depósitos
- Funcionalidades Principales
+## Estructura del Repositorio
 
-Para Clientes
-Registro e inicio de sesión seguro
-Consulta de saldo en tiempo real
-Realización de depósitos
-Retiro de fondos
-Transferencias entre cuentas propias
-Transferencias a terceros
-Conversión de divisas
-Historial de transacciones
-Generación de estados de cuenta 
+```plaintext
+Los-Rezagados-Sistema-Bancario
+│
+├── authentication-service/   # Microservicio en .NET 8 (Auth & Users)
+│   ├── src/
+│   │   ├── AuthService.Api/
+│   │   ├── AuthService.Persistence/ # Mapeo de DB (PostgreSQL)
+│   │   └── AuthService.Domain/
+│   └── docker-compose.yml
+│
+├── banking-services/         # Microservicios en Node.js
+│   ├── account-service/
+│   └── transaction-service/
+│
+└── .gitignore                # Configuración para omitir binarios (bin/obj)
+```
 
-Para Administradores
-Gestión de usuarios y roles
-Creación y configuración de cuentas
-Monitoreo de transacciones
-Gestión de tasas de cambio
-Reportes y análisis del sistema
-Auditoría de operaciones
+---
 
-Alcance del Proyecto
-Incluido en el Alcance
+## Estado del Proyecto
 
-Sistema de autenticación y autorización
--Gestión completa de cuentas bancarias
--Operaciones financieras básicas (depósitos, retiros, transferencias)
--Sistema de conversión de divisas
--Historial y reportes de transacciones
--Panel de administración
+| Módulo | Estado |
+|---|---|
+| Arquitectura | 100% Implementada |
+| Seguridad (JWT & RBAC) | Funcional |
+| Base de Datos (Docker) |  Migraciones ejecutadas y contenedor listo |
+| Limpieza de Código | 100% libre de archivos temporales y binarios |
 
+---
 
-Beneficios Esperados
-Para los Usuarios
+##  Autores
 
-Seguridad: Protección robusta de información financiera
-Conveniencia: Acceso 24/7 a servicios bancarios
-Transparencia: Visibilidad completa de operaciones
-Eficiencia: Operaciones rápidas y confiables
-
-Para la Organización
-
-Escalabilidad: Arquitectura preparada para crecimiento
-Mantenibilidad: Código organizado y documentado
-Trazabilidad: Auditoría completa de operaciones
-Competitividad: Sistema moderno alineado con estándares del mercado
-
-Buenas Prácticas de Desarrollo
-El proyecto se adhiere a las siguientes buenas prácticas:
-
--Clean Code: Código legible y mantenible
--SOLID Principles: Diseño orientado a objetos robusto
--Testing: Cobertura de pruebas automatizadas
--Code Reviews: Revisión de código entre pares
--Documentación: Documentación técnica completa
--Versionamiento: Control de versiones con Git
--CI/CD: Integración y despliegue continuo
-
-
-
-Equipo de Desarrollo
-
-El proyecto requiere la participación de profesionales con los siguientes roles:
-
-Project Manager / Product Owner
-Scrum Master
-Backend Developers
-Frontend Developers
-UI/UX Designers
-Database Administrator
-QA Engineers
-Security Specialist
-DevOps Engineer
-
-Entregables
-Documentación
-
-Plan de proyecto
-Documento de requisitos
-Diseño de arquitectura
-Manual de usuario
-Documentación técnica
-
-Software
-
-Código fuente
-Scripts de base de datos
-Configuraciones de despliegue
-Suite de pruebas automatizadas
-
-Reportes
-
-Reportes de avance por sprint
-Resultados de pruebas
-Métricas de calidad
-Documentación de incidentes
-
-
-
-
-Versión del Documento: 1.0
-
-Fecha de Última Actualización: 15 Febrero 2026
-
-Estado: 35%
+**Equipo:** Los Rezagados
+**Curso:** Taller de IN6AM — Jornada Matutina
